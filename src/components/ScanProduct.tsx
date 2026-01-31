@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Product } from "../models/Product";
 import ProductCard from "./ProductCard";
-import QRCode from "react-qr-code";
 
 interface ScanProductProps {
   inventory: Product[];
@@ -67,14 +66,6 @@ const ScanProduct: React.FC<ScanProductProps> = ({ inventory, onUpdateProduct })
       {currentProduct && (
         <div className="product-card-container" style={{ flexDirection: "column", alignItems: "center" }}>
           <ProductCard product={currentProduct} />
-
-      <div style={{ marginTop: "10px" }}>
-        <QRCode value={JSON.stringify({
-          id: currentProduct.product_id,
-          name: currentProduct.product_name,
-          stock: currentProduct.stock
-        })} size={128} />
-      </div>
 
 
           <div style={{ marginTop: "10px", display: "flex", gap: "10px", justifyContent: "center" }}>
