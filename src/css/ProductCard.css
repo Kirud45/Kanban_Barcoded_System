@@ -1,0 +1,34 @@
+.product-card {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+  max-width: 350px;
+  border-radius: 5px;
+  box-shadow: 2px 2px 5px #aaa;
+}
+
+.product-card-header h3 {
+  margin: 0;
+}
+
+.alert {
+  color: #b51e19; 
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+ul {
+  list-style-type: none; 
+  padding-left: 0;       
+}
+
+ul li {
+  margin-bottom: 5px;   
+}
+
+.product-card-container {
+  display: flex;
+  justify-content: center; 
+  align-items: center;     
+  margin-top: 20px;        
+}
