@@ -1,3 +1,61 @@
+/* General CSS */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+  color: #333;
+}
+
+/* Navbar CSS */
+.navbar {
+  width: 100%;
+  background-color: #5091d3;
+  color: white;
+  padding: 15px 0px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  flex-wrap: nowrap;
+}
+
+.navbar h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  white-space: nowrap;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 15px;
+}
+
+.navbar a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.navbar a:hover {
+  text-decoration: underline;
+}
+
+
+/* Footer CSS */
+.footer {
+  width: 100%;
+  background-color: #5091d3;
+  color: white;
+  text-align: center;
+  padding: 10px 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+}
+
+
+/* Product Card CSS */
 .product-card {
   border: 1px solid #ccc;
   padding: 10px;

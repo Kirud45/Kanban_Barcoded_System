@@ -19,30 +19,54 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="App" style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <h1>Kanban Warehouse Inventory</h1>
-
-      {/*CSV Upload*/}
-      <UploadCSV onLoadInventory={handleLoadInventory} />
-
-      {/*Scan Product*/}
-      {inventory.length > 0 && (
-        <ScanProduct inventory={inventory} onUpdateProduct={handleUpdateProduct} />
-      )}
-
-     
-      {inventory.length > 0 && (
-        <div style={{ marginTop: "30px" }}>
-          <h2>Inventory Product List</h2>
-          <ul>
-            {inventory.map((p) => (
-              <li key={p.product_id}>
-                {p.product_name} (ID: {p.product_id}) - Stock: {p.stock}
-              </li>
-            ))}
-          </ul>
+    <div className="App">
+      {/* Navbar */}
+      <header className="navbar">
+        <div className="navbar-links">
+          <a href="#">Home</a>
+          <a href="#">Alerts</a>
+          <a href="#">Generate Barcode</a>
         </div>
-      )}
+        <h1>Kanban Warehouse Inventory</h1>
+      </header>
+
+      <main style={{ padding: "20px", minHeight: "80vh" }}>
+        {/* CSV Upload Section */}
+        <section style={{ marginBottom: "30px" }}>
+          <h2>Upload Inventory CSV</h2>
+          <UploadCSV onLoadInventory={handleLoadInventory} />
+        </section>
+
+        {/* Scan Product Section */}
+        {inventory.length > 0 && (
+          <section style={{ marginBottom: "30px" }}>
+            <h2>Scan Product</h2>
+            <ScanProduct
+              inventory={inventory}
+              onUpdateProduct={handleUpdateProduct}
+            />
+          </section>
+        )}
+
+        {/* Inventory List Section */}
+        {inventory.length > 0 && (
+          <section style={{ marginBottom: "30px" }}>
+            <h2>Inventory Product List</h2>
+            <ul>
+              {inventory.map((p) => (
+                <li key={p.product_id}>
+                  {p.product_name} (ID: {p.product_id}) - Stock: {p.stock}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer className="footer">
+        &copy; 2026 Barcoded Kanban Inventory System.
+      </footer>
     </div>
   );
 };
