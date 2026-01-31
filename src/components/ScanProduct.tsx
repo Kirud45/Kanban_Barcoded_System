@@ -28,8 +28,13 @@ const ScanProduct: React.FC<ScanProductProps> = ({ inventory, onUpdateProduct })
 
   //Decrease Stock
   const decreaseBtn = () => {
-    if (!currentProduct) return;
-    const updatedProduct = { ...currentProduct, stock: currentProduct.stock - 1 };
+    if (!currentProduct || currentProduct.stock <= 0) return;
+
+    const updatedProduct = {
+      ...currentProduct,
+      stock: currentProduct.stock - 1
+    };
+
     setCurrentProduct(updatedProduct);
     onUpdateProduct(updatedProduct);
   };
@@ -64,7 +69,11 @@ const ScanProduct: React.FC<ScanProductProps> = ({ inventory, onUpdateProduct })
           <ProductCard product={currentProduct} />
 
       <div style={{ marginTop: "10px" }}>
-        <QRCode value={`http://localhost:3000/products/${currentProduct.product_id}`} size={128} />
+        <QRCode value={JSON.stringify({
+          id: currentProduct.product_id,
+          name: currentProduct.product_name,
+          stock: currentProduct.stock
+        })} size={128} />
       </div>
 
 
