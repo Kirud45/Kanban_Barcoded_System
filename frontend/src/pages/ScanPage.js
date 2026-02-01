@@ -23,8 +23,9 @@ import InventoryIcon from "@mui/icons-material/Inventory";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import FactoryIcon from "@mui/icons-material/Factory";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
-const steps = ["Scan Barcode", "Review Item", "Reorder Details"];
+const steps = ["Scan Barcode", "Review Item", "Create Order"];
 
 function ScanPage() {
   const navigate = useNavigate();
@@ -52,15 +53,17 @@ function ScanPage() {
   const loadItemData = async (id) => {
     setLoading(true);
     try {
-      // Mock data - replace with actual API call
+      // Mock data - replace with actual API call to your backend
       const mockItem = {
         id: id || "1001",
+        internalId: id || "1001",
         itemName: "Widget Pro",
         displayName: "Premium Widget Pro",
         type: "Inventory Item",
         location: locationId || "Main Warehouse",
         reorderPoint: 10,
         preferredVendor: "Vendor Corp Inc.",
+        preferredVendorId: "123",
         unitPrice: 24.99,
         bins: [
           { binId: binId || "BIN-A", quantity: 8, maxQuantity: 50 },
@@ -107,22 +110,49 @@ function ScanPage() {
   };
   
   const handleSubmitToNetSuite = () => {
-    // NetSuite OAuth redirect URL
-    const netsuiteBaseUrl = "https://system.netsuite.com";
-    const itemParam = itemData ? encodeURIComponent(itemData.displayName) : "";
-    const quantityParam = quantity;
-    const binParam = binId || "BIN-A";
+    // NetSuite Suitelet URL - Replace with your actual Suitelet URL
+    const netsuiteAccountId = process.env.REACT_APP_NETSUITE_ACCOUNT_ID || "1234567";
+    const scriptId = process.env.REACT_APP_NETSUITE_SCRIPT_ID || "customscript_kanban_reorder";
+    const deployId = process.env.REACT_APP_NETSUITE_DEPLOY_ID || "customdeploy_kanban_reorder";
     
-    // Create a mock URL for demonstration
-    const mockNetSuiteUrl = `${netsuiteBaseUrl}/app/center/card.nl?sc=-29&whence=`;
+    // Suitelet URL format
+    const suiteletUrl = `https://${netsuiteAccountId}.restlets.api.netsuite.com/app/site/hosting/restlet.nl`;
     
-    alert(`📤 Ready to submit to NetSuite:\n\nItem: ${itemData?.displayName}\nQuantity: ${quantity}\nBin: ${binParam}\n\nAfter submission, active bin will switch to ${getAlternateBin()?.binId}`);
+    // Create parameters for the Suitelet
+    const params = new URLSearchParams({
+      script: scriptId,
+      deploy: deployId,
+      itemId: itemData?.internalId || itemId,
+      itemName: itemData?.displayName || "Unknown Item",
+      quantity: quantity.toString(),
+      binId: binId || "BIN-A",
+      alternateBinId: getAlternateBin()?.binId || "BIN-B",
+      location: itemData?.location || "Main Warehouse",
+      vendorId: itemData?.preferredVendorId || "123",
+      vendorName: itemData?.preferredVendor || "Default Vendor",
+      unitPrice: itemData?.unitPrice?.toString() || "0",
+      notes: notes || `Replenish ${binId || "BIN-A"}`,
+      currentQuantity: getActiveBin()?.quantity?.toString() || "0",
+      maxQuantity: getActiveBin()?.maxQuantity?.toString() || "50",
+      returnUrl: `${window.location.origin}/scan?success=true&item=${encodeURIComponent(itemData?.displayName || "")}`
+    });
     
-    // In real implementation, this would redirect to NetSuite
-    // window.location.href = mockNetSuiteUrl;
+    const fullUrl = `${suiteletUrl}?${params.toString()}`;
     
-    // Reset for next scan
-    handleReset();
+    // For development, show what would happen
+    if (process.env.NODE_ENV === 'development') {
+      alert(`DEMO: Would redirect to NetSuite Suitelet\n\nSuitelet URL: ${suiteletUrl}\n\nParameters:\n- Item: ${itemData?.displayName}\n- Quantity: ${quantity}\n- Bin: ${binId} → ${getAlternateBin()?.binId}\n- Location: ${itemData?.location}\n\nIn production, this would open NetSuite login if not authenticated.`);
+      
+      // Simulate successful submission
+      setTimeout(() => {
+        alert(`✅ Purchase order submitted to NetSuite!\n\nItem: ${itemData?.displayName}\nQuantity: ${quantity}\nBin switched: ${binId} → ${getAlternateBin()?.binId}`);
+        handleReset();
+      }, 1000);
+    } else {
+      // Production: Redirect to NetSuite Suitelet
+      // NetSuite will handle authentication via OAuth or session cookie
+      window.location.href = fullUrl;
+    }
   };
   
   const getActiveBin = () => {
@@ -145,11 +175,11 @@ function ScanPage() {
         <Box display="flex" alignItems="center" justifyContent="center" gap={2}>
           <FactoryIcon sx={{ fontSize: 40, color: "primary.main" }} />
           <Typography variant="h4" gutterBottom align="center">
-            Warehouse Scanner
+            Kanban Barcode Scanner
           </Typography>
         </Box>
         <Typography variant="subtitle1" color="textSecondary" align="center">
-          Scan Kanban barcode to reorder items • No login required
+          Scan barcode to review items and create NetSuite purchase orders
         </Typography>
       </Box>
       
@@ -171,16 +201,16 @@ function ScanPage() {
               Ready to Scan
             </Typography>
             <Typography variant="body1" color="textSecondary" gutterBottom>
-              Point barcode scanner at Kanban card
+              Point barcode scanner at Kanban card to begin
             </Typography>
             
             <Alert severity="info" sx={{ mb: 3, textAlign: "left" }}>
               <Typography variant="body2">
-                • Scanner will automatically navigate to this page
-                <br />
                 • No login required for scanning
                 <br />
-                • NetSuite login only needed when submitting order
+                • NetSuite authentication handled automatically
+                <br />
+                • Bin switching happens automatically after order
               </Typography>
             </Alert>
             
@@ -195,7 +225,7 @@ function ScanPage() {
                 Simulate Barcode Scan
               </Button>
               <Typography variant="caption" display="block" sx={{ mt: 2, color: "text.secondary" }}>
-                (For testing without a scanner)
+                (Test without a physical scanner)
               </Typography>
             </Box>
             
@@ -211,13 +241,11 @@ function ScanPage() {
                     <Typography variant="body2">
                       1. Scan Kanban card barcode
                       <br />
-                      2. Review item details
+                      2. Review item and stock levels
                       <br />
-                      3. Confirm reorder quantity
+                      3. Confirm reorder details
                       <br />
-                      4. Submit to NetSuite
-                      <br />
-                      5. System switches bins automatically
+                      4. Create order in NetSuite
                     </Typography>
                   </CardContent>
                 </Card>
@@ -229,13 +257,9 @@ function ScanPage() {
                       🔄 Bin Switching:
                     </Typography>
                     <Typography variant="body2">
-                      When Bin A is empty:
+                      Current active bin: <strong>{binId || "BIN-A"}</strong>
                       <br />
-                      • Scan → Reorder Bin A
-                      <br />
-                      • Active bin switches to Bin B
-                      <br />
-                      • Next scan will reorder Bin B
+                      After reorder switches to: <strong>{binId === "BIN-A" ? "BIN-B" : "BIN-A"}</strong>
                     </Typography>
                   </CardContent>
                 </Card>
@@ -273,7 +297,7 @@ function ScanPage() {
                           {itemData.displayName}
                         </Typography>
                         <Typography variant="body2" color="textSecondary">
-                          {itemData.itemName}
+                          {itemData.itemName} • ID: {itemData.internalId}
                         </Typography>
                       </Grid>
                       <Grid item xs={12} md={6}>
@@ -337,7 +361,7 @@ function ScanPage() {
                           bin.quantity <= bin.maxQuantity * 0.2 ? "error.main" :
                           bin.quantity <= bin.maxQuantity * 0.5 ? "warning.main" : "success.main"
                         }>
-                          {bin.maxQuantity - bin.quantity} needed
+                          {bin.maxQuantity - bin.quantity} units needed
                         </Typography>
                       </Box>
                     </CardContent>
@@ -361,8 +385,8 @@ function ScanPage() {
               <Button onClick={handleBack}>
                 Back to Scan
               </Button>
-              <Button variant="contained" onClick={handleNext}>
-                Continue to Reorder
+              <Button variant="contained" onClick={handleNext} endIcon={<ArrowForwardIcon />}>
+                Continue to Order
               </Button>
             </Box>
           </Box>
@@ -371,13 +395,13 @@ function ScanPage() {
         {activeStep === 2 && itemData && (
           <Box>
             <Typography variant="h5" gutterBottom>
-              📝 Reorder Details
+              📝 Create Purchase Order
             </Typography>
             
             <Alert severity="info" sx={{ mb: 3 }}>
               <Typography variant="body2">
-                You will be redirected to NetSuite to authenticate and submit the purchase order.
-                No app login required.
+                This will create a purchase order in NetSuite via Suitelet. 
+                If you're not logged into NetSuite, you'll be prompted to authenticate.
               </Typography>
             </Alert>
             
@@ -408,7 +432,7 @@ function ScanPage() {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Notes"
+                  label="Notes (Optional)"
                   multiline
                   rows={2}
                   value={notes}
@@ -472,14 +496,29 @@ function ScanPage() {
                       <Grid item xs={6}>
                         <Typography variant="body2">{itemData.preferredVendor}</Typography>
                       </Grid>
+                      
+                      <Grid item xs={6}>
+                        <Typography variant="body2" color="textSecondary">Location:</Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="body2">{itemData.location}</Typography>
+                      </Grid>
                     </Grid>
                   </CardContent>
                 </Card>
               </Grid>
             </Grid>
             
+            <Alert severity="warning" sx={{ mt: 3 }}>
+              <Typography variant="body2">
+                <strong>Bin Switching:</strong> After this order is created in NetSuite, 
+                the system will automatically update the active bin from {binId} to {getAlternateBin()?.binId}.
+                Future scans will reorder the alternate bin.
+              </Typography>
+            </Alert>
+            
             <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}>
-              <Button onClick={handleBack}>Back</Button>
+              <Button onClick={handleBack}>Back to Review</Button>
               <Button
                 variant="contained"
                 color="success"
@@ -487,19 +526,14 @@ function ScanPage() {
                 onClick={handleSubmitToNetSuite}
                 disabled={!quantity || quantity < 1}
                 sx={{ px: 4 }}
+                endIcon={<ArrowForwardIcon />}
               >
-                Submit to NetSuite
+                Create NetSuite Purchase Order
               </Button>
             </Box>
           </Box>
         )}
       </Paper>
-      
-      <Box textAlign="center" sx={{ mt: 2 }}>
-        <Typography variant="caption" color="textSecondary">
-          Warehouse workers scan → Managers submit to NetSuite
-        </Typography>
-      </Box>
     </Container>
   );
 }
